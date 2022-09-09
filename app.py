@@ -1,75 +1,166 @@
 from tkinter import *
 from tkinter import messagebox
 from db import Database
-import datetime
+
 
 
 
 db = Database("spaced_interval.db")
-current_date = datetime.date.today()
+
+
+
+def days_from_last_revision(db_date):
+	from datetime import date
+
+	db_date = db_date
+
+	year = int(db_date[0:4]) 
+	month = int(db_date[5:7])
+	day = int(db_date[8:10])
+
+	db_date = date(year, month, day)
+
+	days = str(date.today() - db_date)[0]
+
+	return int(days)
+
  
 
 def populate():
-	for_today.delete(0,END)
+	# deleting the pre-existing data
+	topics_for_today.delete(0,END)
+
+	techniques = {1: "Feynamnn Technique", 7: "Solve Questions on the topic", 30: "Feynmann Technique"}
+
+
+	# updating with new data
 	for row in db.fetch():
-		for_today.insert(END, row)
+
+		days = days_from_last_revision(row[3])
+
+		if days in techniques:
+			topics_for_today.insert(END, row[1])
+			source.insert(END, row[2])
+			technique.insert(END, techniques[days])
+
+
+	return
+
 
 
 def add_topic():
-	if part_text.get() == '':
-		messagebox.showerror('Required Field', 'Please include the topic')
+	if topic_text.get() == '' or source_text.get() =='':
+		messagebox.showerror('Required Field', 'Please include the Topic and Source')
 		return
 
-	db.insert(part_text.get(), current_date)
-	for_today.delete(0,END)
-	# The following line of code is added by the tutorial\
-	# but I don't think it is needed, hence commenting it(if indeed it is needed)
-	#for_today.insert(END, part_text.get, current_date)
-	populate()
+	from datetime import date
+	current_date = date.today()
 
-	print("Topic Added")
+	db.insert(topic_text.get(), current_date, source_text.get())
+	#topics_for_today.delete(0,END)
 
+
+	print("Topic Added to Database")
+
+
+
+
+##################################################################################################################
 
 # creating window object
 app = Tk()
 
 app.title("learning log")
-app.geometry("800x350")
+app.geometry("1183x384")
 
 
 # For entry of todays topic
 # Part--> matrix[0][0]
-part_text = StringVar()
-part_label = Label(app, text="Today I Learnt", font=("bold",14), pady=20)
-part_label.grid(row=0, column=0, sticky=W) #alligning the part to the west(left) of the text
+topic_text = StringVar()
+topic_label = Label(app, text="Today I Learnt:", font=("bold",10))
+topic_label.grid(row=0, column=1) #alligning the part to the west(left) of the text
 # Part--> matrix[0][1]
-part_entry = Entry(app, textvariable=part_text) #for entry of data
-part_entry.grid(row=0, column=1)
+topic_entry = Entry(app, textvariable=topic_text) #for entry of data
+topic_entry.grid(row=0, column=2)
 
 
-# Topics to be revised today list box
-for_today = Listbox(app, height=8, width=50, border=0)
-for_today.grid(row=3, column=0, columnspan=3, rowspan=6, pady=20, padx=20)
-# create scroll bar
-scrollbar = Scrollbar(app)
-scrollbar.grid(row=3, column=3)
-# Set scroll to listbox
-for_today.configure(yscrollcommand=scrollbar.set)
-scrollbar.configure(command=for_today.yview)
+# For entry of source of learning(book/course/tutorial etc.)
+source_text = StringVar()
+source_label = Label(app, text="Source to refer:", font=("bold",10))
+source_label.grid(row=0, column=4) #alligning the part to the west(left) of the text
+# Part--> matrix[0][1]
+source_entry = Entry(app, textvariable=source_text) #for entry of data
+source_entry.grid(row=0, column=5)
+
 
 # Buttons
 add_btn  = Button(app, text="Add Topic", width=12, command=add_topic)
-add_btn.grid(row=2, column=1, pady=20)
-
-
-# Resources
-resource = Listbox(app, height=8, width=50, border=0)
-resource.grid(row=3, column=4, columnspan=3,rowspan=6, pady=20, padx=20)
+add_btn.grid(row=2, column=3, pady=10)
 
 
 
-# Calling this function to populate the text part
+# Topics to be revised today list box
+part_labelTopics = Label(app, text="Topics to revise today", font=("bold",10), pady=10)
+part_labelTopics.grid(row=3, column=0) #alligning the part to the west(left) of the text
+topics_for_today = Listbox(app)
+topics_for_today.grid(row=4, column=0, rowspan=6)
+# create scroll bar
+scrollbar = Scrollbar(app)
+scrollbar.grid(row=4, column=1)
+# Set scroll to listbox
+topics_for_today.configure(yscrollcommand=scrollbar.set)
+scrollbar.configure(command=topics_for_today.yview)
+
+
+
+
+# Sources
+part_label_source = Label(app, text="Source(from where to revise)", font=("bold",10), pady=10)
+part_label_source.grid(row=3, column=2) #alligning the part to the west(left) of the text
+source = Listbox(app)
+source.grid(row=4, column=2,rowspan=6)
+# create scroll bar
+scrollbar = Scrollbar(app)
+scrollbar.grid(row=4, column=3)
+# Set scroll to listbox
+source.configure(yscrollcommand=scrollbar.set)
+scrollbar.configure(command=source.yview)
+
+
+
+
+# Revision Technique
+part_label_technique = Label(app, text="Technique(how to revise)", font=("bold",10), pady=10)
+part_label_technique.grid(row=3, column=4) #alligning the part to the west(left) of the text
+technique = Listbox(app)
+technique.grid(row=4, column=4,rowspan=6)
+# create scroll bar
+scrollbar = Scrollbar(app)
+scrollbar.grid(row=4, column=5)
+# Set scroll to listbox
+technique.configure(yscrollcommand=scrollbar.set)
+scrollbar.configure(command=technique.yview)
+
+
+
+
+
+# Status
+part_labelStatus = Label(app, text="Revision Status", font=("bold",10), pady=10)
+part_labelStatus.grid(row=3, column=6, sticky=W) #alligning the part to the west(left) of the text
+status = Listbox(app)
+status.grid(row=4, column=6,rowspan=6)
+# create scroll bar
+scrollbar = Scrollbar(app)
+scrollbar.grid(row=4, column=7)
+# Set scroll to listbox
+status.configure(yscrollcommand=scrollbar.set)
+scrollbar.configure(command=status.yview)
+
+
+# Calling the function to populate the "for today", "resource" and "status" sections.
 populate()
+
 
 # start mainloop
 app.mainloop()
